@@ -211,7 +211,6 @@ public class SendTest {
 		JSONAssert.assertEquals(expectedJsonBody, payloadCaptor.getValue(), true);
 	}
 
-	//FIXME split in two!!
 	@Test
 	public void shouldSendTextMessageWithEmailAndPhoneNumberQuickReplies() throws Exception {
 		final IdRecipient recipient = IdRecipient.create("<PSID>");
