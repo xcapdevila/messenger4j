@@ -15,14 +15,14 @@ import java.util.Optional;
 @EqualsAndHashCode
 public final class ThreadOwnerResponse {
 
-	private final Optional<List<ThreadOwner>> data;
+	private final Optional<List<ThreadOwner>> threadOwners;
 
-	public ThreadOwnerResponse(@NonNull Optional<List<ThreadOwner>> data) {
-		this.data = data;
+	public ThreadOwnerResponse(@NonNull Optional<List<ThreadOwner>> threadOwners) {
+		this.threadOwners = threadOwners;
 	}
 
 	public Optional<List<ThreadOwner>> data() {
-		return data;
+		return threadOwners;
 	}
 
 }

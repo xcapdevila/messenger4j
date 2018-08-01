@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Optional;
 
 /**
@@ -76,6 +77,10 @@ public final class GsonUtil {
 	public static Optional<JsonObject> getPropertyAsJsonObject(JsonObject jsonObject, Constants... propertyPath) {
 		final Optional<JsonElement> jsonElement = getProperty(jsonObject, propertyPath);
 		return jsonElement.map(JsonElement::getAsJsonObject);
+	}
+
+	public static boolean hasAnyMember(JsonObject jsonObject, String... members) {
+		return Arrays.stream(members).anyMatch(member -> jsonObject.has(member));
 	}
 
 	/**

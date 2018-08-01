@@ -15,14 +15,14 @@ import java.util.Optional;
 @EqualsAndHashCode
 public final class SecondaryReceiversResponse {
 
-	private final Optional<List<SecondaryReceiver>> data;
+	private final Optional<List<SecondaryReceiver>> secondaryReceivers;
 
-	public SecondaryReceiversResponse(@NonNull Optional<List<SecondaryReceiver>> data) {
-		this.data = data;
+	public SecondaryReceiversResponse(@NonNull Optional<List<SecondaryReceiver>> secondaryReceivers) {
+		this.secondaryReceivers = secondaryReceivers;
 	}
 
 	public Optional<List<SecondaryReceiver>> data() {
-		return data;
+		return secondaryReceivers;
 	}
 
 }
