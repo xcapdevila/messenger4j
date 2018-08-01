@@ -1,10 +1,11 @@
 package com.github.messenger4j.webhook.event;
 
 import com.github.messenger4j.webhook.event.common.Referral;
-import java.time.Instant;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.ToString;
+
+import java.time.Instant;
 
 /**
  * @author Max Grabenhorst
@@ -14,15 +15,15 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 public final class ReferralEvent extends BaseEvent {
 
-    private final Referral referral;
+	private final Referral referral;
 
-    public ReferralEvent(@NonNull String senderId, @NonNull String recipientId, @NonNull Instant timestamp,
-                         @NonNull Referral referral) {
-        super(senderId, recipientId, timestamp);
-        this.referral = referral;
-    }
+	public ReferralEvent(@NonNull String senderId, @NonNull String recipientId, @NonNull Instant timestamp, @NonNull BaseEventType baseEventType,
+			@NonNull Referral referral) {
+		super(senderId, recipientId, timestamp, baseEventType);
+		this.referral = referral;
+	}
 
-    public Referral referral() {
-        return referral;
-    }
+	public Referral referral() {
+		return referral;
+	}
 }
