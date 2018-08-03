@@ -13,50 +13,49 @@ import java.util.Optional;
  */
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class InstantGameEvent extends BaseEvent{
+public final class InstantGameEvent extends BaseEvent {
 
-    private final String gameId;
-    private final String playerId;
-    private final String contextType;
-    private final Optional<String> contextId;
-    private final Optional<Integer> score;
-    private final Optional<String> payload;
+	private final String gameId;
+	private final String playerId;
+	private final String contextType;
+	private final Optional<String> contextId;
+	private final Optional<Integer> score;
+	private final Optional<String> payload;
 
+	public InstantGameEvent(@NonNull String senderId, @NonNull String recipientId, @NonNull Instant timestamp, @NonNull BaseEventType baseEventType,
+			@NonNull String gameId, @NonNull String playerId, @NonNull String contextType, @NonNull Optional<String> contextId,
+			@NonNull Optional<Integer> score, @NonNull Optional<String> payload) {
+		super(senderId, recipientId, timestamp, baseEventType);
 
-    public InstantGameEvent(@NonNull String senderId, @NonNull String recipientId, @NonNull Instant timestamp,
-                            @NonNull String gameId, @NonNull String playerId, @NonNull String contextType,
-                            @NonNull Optional<String> contextId, @NonNull Optional<Integer> score, @NonNull Optional<String> payload) {
-        super(senderId, recipientId, timestamp);
+		this.gameId = gameId;
+		this.playerId = playerId;
+		this.contextType = contextType;
+		this.contextId = contextId;
+		this.score = score;
+		this.payload = payload;
+	}
 
-        this.gameId = gameId;
-        this.playerId = playerId;
-        this.contextType = contextType;
-        this.contextId = contextId;
-        this.score = score;
-        this.payload = payload;
-    }
+	public String gameId() {
+		return gameId;
+	}
 
-    public String gameId() {
-        return gameId;
-    }
+	public String playerId() {
+		return playerId;
+	}
 
-    public String playerId() {
-        return playerId;
-    }
+	public String contextType() {
+		return contextType;
+	}
 
-    public String contextType() {
-        return contextType;
-    }
+	public Optional<String> contextId() {
+		return contextId;
+	}
 
-    public Optional<String> contextId() {
-        return contextId;
-    }
+	public Optional<Integer> score() {
+		return score;
+	}
 
-    public Optional<Integer> score() {
-        return score;
-    }
-
-    public Optional<String> payload() {
-        return payload;
-    }
+	public Optional<String> payload() {
+		return payload;
+	}
 }

@@ -13,6 +13,7 @@ import static com.github.messenger4j.internal.gson.GsonUtil.getPropertyAsInstant
 import static com.github.messenger4j.internal.gson.GsonUtil.getPropertyAsString;
 import static com.github.messenger4j.internal.gson.GsonUtil.hasProperty;
 
+import com.github.messenger4j.webhook.event.BaseEventType;
 import com.github.messenger4j.webhook.event.MessageEchoEvent;
 import com.google.gson.JsonObject;
 import java.time.Instant;
@@ -30,7 +31,7 @@ final class MessageEchoEventFactory implements BaseEventFactory<MessageEchoEvent
     }
 
     @Override
-    public MessageEchoEvent createEventFromJson(JsonObject messagingEvent) {
+    public MessageEchoEvent createEventFromJson(JsonObject messagingEvent, BaseEventType baseEventType) {
         final String senderId = getPropertyAsString(messagingEvent, PROP_SENDER, PROP_ID)
                 .orElseThrow(IllegalArgumentException::new);
         final String recipientId = getPropertyAsString(messagingEvent, PROP_RECIPIENT, PROP_ID)
@@ -43,6 +44,6 @@ final class MessageEchoEventFactory implements BaseEventFactory<MessageEchoEvent
                 .orElseThrow(IllegalArgumentException::new);
         final Optional<String> metadata = getPropertyAsString(messagingEvent, PROP_MESSAGE, PROP_METADATA);
 
-        return new MessageEchoEvent(senderId, recipientId, timestamp, messageId, appId, metadata);
+        return new MessageEchoEvent(senderId, recipientId, timestamp, baseEventType, messageId, appId, metadata);
     }
 }

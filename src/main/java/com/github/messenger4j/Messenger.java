@@ -4,6 +4,7 @@ import com.github.messenger4j.exception.MessengerApiException;
 import com.github.messenger4j.exception.MessengerApiExceptionFactory;
 import com.github.messenger4j.exception.MessengerIOException;
 import com.github.messenger4j.exception.MessengerVerificationException;
+import com.github.messenger4j.handover.*;
 import com.github.messenger4j.internal.gson.GsonFactory;
 import com.github.messenger4j.messengerprofile.*;
 import com.github.messenger4j.send.MessageResponse;
@@ -16,6 +17,7 @@ import com.github.messenger4j.userprofile.UserProfile;
 import com.github.messenger4j.userprofile.UserProfileFactory;
 import com.github.messenger4j.webhook.Event;
 import com.github.messenger4j.webhook.SignatureUtil;
+import com.github.messenger4j.webhook.event.BaseEventType;
 import com.github.messenger4j.webhook.factory.EventFactory;
 import com.google.gson.*;
 import lombok.NonNull;
@@ -30,8 +32,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static com.github.messenger4j.internal.gson.GsonUtil.Constants.*;
-import static com.github.messenger4j.internal.gson.GsonUtil.getPropertyAsJsonArray;
-import static com.github.messenger4j.internal.gson.GsonUtil.getPropertyAsString;
+import static com.github.messenger4j.internal.gson.GsonUtil.*;
 import static com.github.messenger4j.spi.MessengerHttpClient.HttpMethod.*;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
@@ -43,15 +44,22 @@ import static java.util.Optional.of;
 @Slf4j
 public final class Messenger {
 
+	/**
+	 * Compatibility with v2.6 has been removed by Facebook
+	 *
+	 * @since 1.1.0
+	 */
 	public enum Version {
-		VERSION_2_6("v2.6"),
 		VERSION_2_7("v2.7"),
 		VERSION_2_8("v2.8"),
 		VERSION_2_9("v2.9"),
 		VERSION_2_10("v2.10"),
 		VERSION_2_11("v2.11"),
 		VERSION_2_12("v2.12"),
-		LATEST(VERSION_2_12.versionUrl);
+		//TODO test 3.0 & 3.1
+		VERSION_3_0("v3.0"),
+		VERSION_3_1("v3.1"),
+		LATEST(VERSION_3_1.versionUrl);
 
 		private final String versionUrl;
 
@@ -97,6 +105,14 @@ public final class Messenger {
 	private static final String HUB_MODE_SUBSCRIBE = "subscribe";
 
 	private static final String FB_GRAPH_API_BASE_URL = "https://graph.facebook.com/";
+
+	private static final String FB_GRAPH_API_URL_PASS_THREAD_CONTROL = FB_GRAPH_API_BASE_URL.concat("%s/me/pass_thread_control?access_token=%s");
+	private static final String FB_GRAPH_API_URL_REQUEST_THREAD_CONTROL = FB_GRAPH_API_BASE_URL.concat("%s/me/request_thread_control?access_token=%s");
+	private static final String FB_GRAPH_API_URL_TAKE_THREAD_CONTROL = FB_GRAPH_API_BASE_URL.concat("%s/me/take_thread_control?access_token=%s");
+	private static final String FB_GRAPH_API_URL_SECONDARY_RECEIVERS = FB_GRAPH_API_BASE_URL.concat("%s/me/secondary_receivers?fields=%s&access_token=%s");
+	private static final String FB_SECONDARY_RECEIVERS_DEFAULT_FIELDS = "id,name";
+	private static final String FB_GRAPH_API_URL_THREAD_OWNER = FB_GRAPH_API_BASE_URL.concat("%s/me/thread_owner?recipient=%s&access_token=%s");
+
 	private static final String FB_GRAPH_API_URL_MESSAGES = FB_GRAPH_API_BASE_URL.concat("%s/me/messages?access_token=%s");
 	private static final String FB_GRAPH_API_URL_MESSENGER_PROFILE = FB_GRAPH_API_BASE_URL.concat("%s/me/messenger_profile?access_token=%s");
 	private static final String FB_GRAPH_API_URL_USER = FB_GRAPH_API_BASE_URL.concat("%s/%s?fields=%s&access_token=%s");
@@ -107,10 +123,20 @@ public final class Messenger {
 	private final String pageAccessToken;
 	private final String appSecret;
 	private final String verifyToken;
+
 	private final String userProfileFields;
+
+	private final String passThreadControlRequestUrl;
+	private final String requestThreadControlRequestUrl;
+	private final String takeThreadControlRequestUrl;
+
+	private final String secondaryReceiversRequestUrl;
+	private final String threadOwnerRequestUrl;
+
 	private final String messagesRequestUrl;
 	private final String messengerProfileRequestUrl;
 	private final String messengerUserProfileRequestUrl;
+
 	private final MessengerHttpClient httpClient;
 
 	private final Gson gson;
@@ -120,8 +146,7 @@ public final class Messenger {
 		return create(pageAccessToken, appSecret, verifyToken, empty());
 	}
 
-	public static Messenger create(@NonNull String pageAccessToken, @NonNull String appSecret, @NonNull String verifyToken,
-			@NonNull Optional<String> version) {
+	public static Messenger create(@NonNull String pageAccessToken, @NonNull String appSecret, @NonNull String verifyToken, @NonNull Optional<String> version) {
 		return create(pageAccessToken, appSecret, verifyToken, version, empty());
 	}
 
@@ -140,12 +165,23 @@ public final class Messenger {
 		this.pageAccessToken = pageAccessToken;
 		this.appSecret = appSecret;
 		this.verifyToken = verifyToken;
-		this.userProfileFields = userProfileFields.orElse(FB_USER_PROFILE_DEFAULT_FIELDS);
-		final String versionUrl = version.orElse(Version.LATEST.versionUrl);
-		this.messagesRequestUrl = String.format(FB_GRAPH_API_URL_MESSAGES, versionUrl, pageAccessToken);
 
+		this.userProfileFields = userProfileFields.orElse(FB_USER_PROFILE_DEFAULT_FIELDS);
+
+		final String versionUrl = version.orElse(Version.LATEST.versionUrl);
+
+		this.passThreadControlRequestUrl = String.format(FB_GRAPH_API_URL_PASS_THREAD_CONTROL, versionUrl, pageAccessToken);
+		this.requestThreadControlRequestUrl = String.format(FB_GRAPH_API_URL_REQUEST_THREAD_CONTROL, versionUrl, pageAccessToken);
+		this.takeThreadControlRequestUrl = String.format(FB_GRAPH_API_URL_TAKE_THREAD_CONTROL, versionUrl, pageAccessToken);
+
+		this.secondaryReceiversRequestUrl = String
+				.format(FB_GRAPH_API_URL_SECONDARY_RECEIVERS, versionUrl, FB_SECONDARY_RECEIVERS_DEFAULT_FIELDS, pageAccessToken);
+		this.threadOwnerRequestUrl = String.format(FB_GRAPH_API_URL_THREAD_OWNER, versionUrl, FORMAT_DIAMOND_STRING, pageAccessToken);
+
+		this.messagesRequestUrl = String.format(FB_GRAPH_API_URL_MESSAGES, versionUrl, pageAccessToken);
 		this.messengerProfileRequestUrl = String.format(FB_GRAPH_API_URL_MESSENGER_PROFILE, versionUrl, pageAccessToken);
 		this.messengerUserProfileRequestUrl = String.format(FB_GRAPH_API_URL_USER, versionUrl, FORMAT_DIAMOND_STRING, FORMAT_DIAMOND_STRING, pageAccessToken);
+
 		this.httpClient = httpClient.orElse(new DefaultMessengerHttpClient());
 
 		this.gson = GsonFactory.createGson();
@@ -157,12 +193,37 @@ public final class Messenger {
 		return doRequest(POST, messagesRequestUrl, of(payload), MessageResponseFactory::create);
 	}
 
+	public HandoverResponse passThreadControl(@NonNull HandoverPayload handoverPayload) throws MessengerApiException, MessengerIOException {
+
+		return sendHandoverRequest(handoverPayload, HandoverAction.PASS);
+	}
+
+	public HandoverResponse requestThreadControl(@NonNull HandoverPayload handoverPayload) throws MessengerApiException, MessengerIOException {
+
+		return sendHandoverRequest(handoverPayload, HandoverAction.REQUEST);
+	}
+
+	public HandoverResponse takeThreadControl(@NonNull HandoverPayload handoverPayload) throws MessengerApiException, MessengerIOException {
+
+		return sendHandoverRequest(handoverPayload, HandoverAction.TAKE);
+	}
+
+	public SecondaryReceiversResponse getSecondaryReceivers() throws MessengerApiException, MessengerIOException {
+
+		return doRequest(GET, secondaryReceiversRequestUrl, empty(), SecondaryReceiversResponseFactory::create);
+	}
+
+	public ThreadOwnerResponse getThreadOwner(String recipientId) throws MessengerApiException, MessengerIOException {
+		final String requestUrl = String.format(threadOwnerRequestUrl, recipientId);
+		return doRequest(GET, requestUrl, empty(), ThreadOwnerResponseFactory::create);
+	}
+
 	public void onReceiveEvents(@NonNull String requestPayload, @NonNull Optional<String> signature, @NonNull Consumer<Event> eventHandler)
 			throws MessengerVerificationException {
 
 		if (signature.isPresent()) {
 			if (!SignatureUtil.isSignatureValid(requestPayload, signature.get(), this.appSecret)) {
-				throw new MessengerVerificationException("Signature verification failed. " + "Provided signature does not match calculated signature.");
+				throw new MessengerVerificationException("Signature verification failed. Provided signature does not match calculated signature.");
 			}
 		} else {
 			log.warn("No signature provided, hence the signature verification is skipped. THIS IS NOT RECOMMENDED");
@@ -171,18 +232,39 @@ public final class Messenger {
 		final JsonObject payloadJsonObject = this.jsonParser.parse(requestPayload).getAsJsonObject();
 
 		final Optional<String> objectType = getPropertyAsString(payloadJsonObject, PROP_OBJECT);
-		if (!objectType.isPresent() || !objectType.get().equalsIgnoreCase(OBJECT_TYPE_PAGE)) {
-			throw new IllegalArgumentException("'object' property must be 'page'. " + "Make sure this is a page subscription");
+		if (objectType.isPresent()) {
+			if (!objectType.get().equalsIgnoreCase(OBJECT_TYPE_PAGE)) {
+				throw new IllegalArgumentException("'object' property must be 'page'. Make sure this is a page subscription");
+			}
+			/**
+			 * Messaging Events (Including StandBy Events)
+			 */
+			final JsonArray entries = getPropertyAsJsonArray(payloadJsonObject, PROP_ENTRY).orElseThrow(IllegalArgumentException::new);
+			for (JsonElement entry : entries) {
+				BaseEventType baseEventType = BaseEventType.MESSAGING;
+				JsonArray receivedEvents = getPropertyAsJsonArray(entry.getAsJsonObject(), PROP_MESSAGING).orElse(null);
+				if (receivedEvents == null) {
+					receivedEvents = getPropertyAsJsonArray(entry.getAsJsonObject(), PROP_STANDBY).orElseThrow(IllegalAccessError::new);
+					baseEventType = BaseEventType.STANDBY;
+				}
+				for (JsonElement receivedEvent : receivedEvents) {
+					final Event event = EventFactory.createEvent(receivedEvent.getAsJsonObject(), baseEventType);
+					eventHandler.accept(event);
+				}
+			}
+		} else if (hasAnyMember(payloadJsonObject, PROP_PASS_THREAD_CONTROL.value(), PROP_REQUEST_THREAD_CONTROL.value(), PROP_TAKE_THREAD_CONTROL.value())) {
+			/**
+			 * Handover Events
+			 */
+			final Event event = EventFactory.createEvent(payloadJsonObject, BaseEventType.HANDOVER);
+			eventHandler.accept(event);
+		} else {
+			/**
+			 * Unrecognized Events
+			 */
+			throw new IllegalArgumentException("Unrecognized event");
 		}
 
-		final JsonArray entries = getPropertyAsJsonArray(payloadJsonObject, PROP_ENTRY).orElseThrow(IllegalArgumentException::new);
-		for (JsonElement entry : entries) {
-			final JsonArray messagingEvents = getPropertyAsJsonArray(entry.getAsJsonObject(), PROP_MESSAGING).orElseThrow(IllegalArgumentException::new);
-			for (JsonElement messagingEvent : messagingEvents) {
-				final Event event = EventFactory.createEvent(messagingEvent.getAsJsonObject());
-				eventHandler.accept(event);
-			}
-		}
 	}
 
 	public void verifyWebhook(@NonNull String mode, @NonNull String verifyToken) throws MessengerVerificationException {
@@ -216,6 +298,25 @@ public final class Messenger {
 		messengerSettingPropertyList.addAll(Arrays.asList(properties));
 		final DeleteMessengerSettingsPayload payload = DeleteMessengerSettingsPayload.create(messengerSettingPropertyList);
 		return doRequest(DELETE, messengerProfileRequestUrl, of(payload), SetupResponseFactory::create);
+	}
+
+	private HandoverResponse sendHandoverRequest(@NonNull HandoverPayload handoverPayload, @NonNull HandoverAction handoverAction)
+			throws MessengerApiException, MessengerIOException {
+		HandoverResponse handoverResponse = null;
+		switch (handoverAction) {
+			case PASS:
+				handoverResponse = doRequest(POST, passThreadControlRequestUrl, of(handoverPayload), HandoverResponseFactory::create);
+				break;
+			case REQUEST:
+				handoverResponse = doRequest(POST, requestThreadControlRequestUrl, of(handoverPayload), HandoverResponseFactory::create);
+				break;
+			case TAKE:
+				handoverResponse = doRequest(POST, takeThreadControlRequestUrl, of(handoverPayload), HandoverResponseFactory::create);
+				break;
+			default:
+				throw new MessengerApiException("Unimplemented Handover Action " + handoverAction, empty(), empty(), empty());
+		}
+		return handoverResponse;
 	}
 
 	private <R> R doRequest(HttpMethod httpMethod, String requestUrl, Optional<Object> payload, Function<JsonObject, R> responseTransformer)
