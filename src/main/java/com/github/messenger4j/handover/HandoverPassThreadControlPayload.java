@@ -16,15 +16,15 @@ import java.util.Optional;
  */
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public final class HandoverPassThradControlPayload extends HandoverPayload {
+public final class HandoverPassThreadControlPayload extends HandoverPayload {
 
 	private final String targetAppId;
 
-	public static HandoverPassThradControlPayload create(@NonNull String recipientId, @NonNull String targetAppId, @NonNull Optional<String> metadata) {
-		return new HandoverPassThradControlPayload(IdRecipient.create(recipientId), targetAppId, metadata);
+	public static HandoverPassThreadControlPayload create(@NonNull String recipientId, @NonNull String targetAppId, @NonNull Optional<String> metadata) {
+		return new HandoverPassThreadControlPayload(IdRecipient.create(recipientId), targetAppId, metadata);
 	}
 
-	public HandoverPassThradControlPayload(Recipient recipient, String targetAppId, Optional<String> metadata) {
+	public HandoverPassThreadControlPayload(Recipient recipient, String targetAppId, Optional<String> metadata) {
 		super(recipient, metadata);
 		this.targetAppId = targetAppId;
 	}

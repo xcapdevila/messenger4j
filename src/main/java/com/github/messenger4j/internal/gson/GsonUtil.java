@@ -158,7 +158,10 @@ public final class GsonUtil {
 		PROP_REQUESTED_OWNER_APP_ID("requested_owner_app_id"),
 		PROP_APP_ROLES("app_roles"),
 		PROP_STANDBY("standby"),
-		PROP_SUCCESS("success");
+		PROP_SUCCESS("success"),
+		PROP_DATA("data"),
+		PROP_NAME("name"),
+		PROP_THREAD_OWNER("name");
 
 		private final String value;
 
