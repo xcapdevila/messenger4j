@@ -161,7 +161,7 @@ public final class GsonUtil {
 		PROP_SUCCESS("success"),
 		PROP_DATA("data"),
 		PROP_NAME("name"),
-		PROP_THREAD_OWNER("name");
+		PROP_THREAD_OWNER("thread_owner");
 
 		private final String value;
 

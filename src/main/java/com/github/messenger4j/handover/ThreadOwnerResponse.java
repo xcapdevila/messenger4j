@@ -21,7 +21,7 @@ public final class ThreadOwnerResponse {
 		this.threadOwner = threadOwner;
 	}
 
-	public Optional<ThreadOwner> data() {
+	public Optional<ThreadOwner> threadOwner() {
 		return threadOwner;
 	}
 

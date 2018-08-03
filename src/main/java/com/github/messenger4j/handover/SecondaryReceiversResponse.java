@@ -21,7 +21,7 @@ public final class SecondaryReceiversResponse {
 		this.secondaryReceivers = secondaryReceivers;
 	}
 
-	public Optional<List<SecondaryReceiver>> data() {
+	public Optional<List<SecondaryReceiver>> secondaryReceivers() {
 		return secondaryReceivers;
 	}
 

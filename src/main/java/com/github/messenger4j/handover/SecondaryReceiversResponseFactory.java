@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.github.messenger4j.internal.gson.GsonUtil.Constants.*;
+import static com.github.messenger4j.internal.gson.GsonUtil.getPropertyAsJsonArray;
+import static com.github.messenger4j.internal.gson.GsonUtil.getPropertyAsString;
 
 /**
  * @author Xavier Capdevila
@@ -21,12 +23,11 @@ public final class SecondaryReceiversResponseFactory {
 
 	public static SecondaryReceiversResponse create(JsonObject jsonObject) {
 		List<SecondaryReceiver> secondaryReceivers = new ArrayList<>();
-		JsonArray data = jsonObject.getAsJsonArray(PROP_DATA.name());
+		JsonArray data = getPropertyAsJsonArray(jsonObject, PROP_DATA).orElse(new JsonArray());
 		for (JsonElement dataArrayObject : data) {
-			final JsonObject dataJsonObject = dataArrayObject.getAsJsonObject();
-			String id = dataJsonObject.get(PROP_ID.name()).getAsString();
-			String name = dataJsonObject.get(PROP_NAME.name()).getAsString();
-			secondaryReceivers.add(new SecondaryReceiver(Optional.of(id), Optional.of(name)));
+			Optional<String> id = getPropertyAsString(dataArrayObject.getAsJsonObject(), PROP_ID);
+			Optional<String> name = getPropertyAsString(dataArrayObject.getAsJsonObject(), PROP_NAME);
+			secondaryReceivers.add(new SecondaryReceiver(id, name));
 		}
 		return new SecondaryReceiversResponse(Optional.of(secondaryReceivers));
 	}

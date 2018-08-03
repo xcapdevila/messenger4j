@@ -6,9 +6,8 @@ import com.google.gson.JsonObject;
 
 import java.util.Optional;
 
-import static com.github.messenger4j.internal.gson.GsonUtil.Constants.PROP_APP_ID;
-import static com.github.messenger4j.internal.gson.GsonUtil.Constants.PROP_DATA;
-import static com.github.messenger4j.internal.gson.GsonUtil.Constants.PROP_THREAD_OWNER;
+import static com.github.messenger4j.internal.gson.GsonUtil.Constants.*;
+import static com.github.messenger4j.internal.gson.GsonUtil.*;
 
 /**
  * @author Xavier Capdevila
@@ -21,12 +20,11 @@ public final class ThreadOwnerResponseFactory {
 
 	public static ThreadOwnerResponse create(JsonObject jsonObject) {
 		ThreadOwner threadOwner = null;
-		JsonArray data = jsonObject.getAsJsonArray(PROP_DATA.name());
+		JsonArray data = getPropertyAsJsonArray(jsonObject, PROP_DATA).orElse(new JsonArray());
 		for (JsonElement dataArrayObject : data) {
-			final JsonObject dataJsonObject = dataArrayObject.getAsJsonObject();
-			final JsonObject threadOwnerJsonObject = dataJsonObject.get(PROP_THREAD_OWNER.name()).getAsJsonObject();
-			String appId = threadOwnerJsonObject.get(PROP_APP_ID.name()).getAsString();
-			threadOwner = new ThreadOwner(Optional.of(appId));
+			JsonObject threadOwnerJsonObject = getPropertyAsJsonObject(dataArrayObject.getAsJsonObject(), PROP_THREAD_OWNER).orElse(new JsonObject());
+			Optional<String> appId = getPropertyAsString(threadOwnerJsonObject, PROP_APP_ID);
+			threadOwner = new ThreadOwner(appId);
 		}
 		return new ThreadOwnerResponse(Optional.ofNullable(threadOwner));
 	}
