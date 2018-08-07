@@ -18,9 +18,9 @@ public final class AppRolesEvent extends BaseEvent {
 
 	private final Optional<AppRoles> appRoles;
 
-	public AppRolesEvent(@NonNull String senderId, @NonNull String recipientId, @NonNull Instant timestamp, @NonNull BaseEventType baseEventType,
+	public AppRolesEvent(@NonNull String recipientId, @NonNull Instant timestamp, @NonNull BaseEventType baseEventType,
 			@NonNull Optional<AppRoles> appRoles) {
-		super(senderId, recipientId, timestamp, baseEventType);
+		super("", recipientId, timestamp, baseEventType);
 		this.appRoles = appRoles;
 	}
 

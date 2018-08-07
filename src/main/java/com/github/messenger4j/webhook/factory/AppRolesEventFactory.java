@@ -26,12 +26,11 @@ final class AppRolesEventFactory implements BaseEventFactory<AppRolesEvent> {
 
 	@Override
 	public AppRolesEvent createEventFromJson(JsonObject messagingEvent, BaseEventType baseEventType) {
-		final String senderId = getPropertyAsString(messagingEvent, PROP_SENDER, PROP_ID).orElseThrow(IllegalArgumentException::new);
 		final String recipientId = getPropertyAsString(messagingEvent, PROP_RECIPIENT, PROP_ID).orElseThrow(IllegalArgumentException::new);
 		final Instant timestamp = getPropertyAsInstant(messagingEvent, PROP_TIMESTAMP).orElseThrow(IllegalArgumentException::new);
-		final Optional<AppRoles> appRoles = getPropertyAsJsonObject(messagingEvent, PROP_REQUEST_THREAD_CONTROL).map(this::getIdRolesFromJsonObject);
+		final Optional<AppRoles> appRoles = getPropertyAsJsonObject(messagingEvent, PROP_APP_ROLES).map(this::getIdRolesFromJsonObject);
 
-		return new AppRolesEvent(senderId, recipientId, timestamp, baseEventType, appRoles);
+		return new AppRolesEvent(recipientId, timestamp, baseEventType, appRoles);
 	}
 
 	private AppRoles getIdRolesFromJsonObject(JsonObject jsonObject) {
@@ -40,7 +39,7 @@ final class AppRolesEventFactory implements BaseEventFactory<AppRolesEvent> {
 			final JsonArray valuesJsonArray = jsonObject.getAsJsonArray(key);
 			final List<String> values = new ArrayList<>(valuesJsonArray.size());
 			for (JsonElement jsonElement : valuesJsonArray) {
-				values.add(jsonElement.toString());
+				values.add(jsonElement.getAsString());
 			}
 			idRoles.put(key, Collections.unmodifiableList(values));
 		}

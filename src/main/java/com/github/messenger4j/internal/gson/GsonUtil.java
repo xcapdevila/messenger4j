@@ -34,6 +34,10 @@ public final class GsonUtil {
 		return getProperty(jsonObject, propertyPath).isPresent();
 	}
 
+	public static boolean hasAnyProperty(JsonObject jsonObject, Constants... propertyPath) {
+		return Arrays.stream(propertyPath).filter(property -> hasProperty(jsonObject, property)).findAny().isPresent();
+	}
+
 	public static Optional<String> getPropertyAsString(JsonObject jsonObject, Constants... propertyPath) {
 		final Optional<JsonElement> jsonElement = getProperty(jsonObject, propertyPath);
 		return jsonElement.map(JsonElement::getAsString);
@@ -77,10 +81,6 @@ public final class GsonUtil {
 	public static Optional<JsonObject> getPropertyAsJsonObject(JsonObject jsonObject, Constants... propertyPath) {
 		final Optional<JsonElement> jsonElement = getProperty(jsonObject, propertyPath);
 		return jsonElement.map(JsonElement::getAsJsonObject);
-	}
-
-	public static boolean hasAnyMember(JsonObject jsonObject, String... members) {
-		return Arrays.stream(members).anyMatch(member -> jsonObject.has(member));
 	}
 
 	/**

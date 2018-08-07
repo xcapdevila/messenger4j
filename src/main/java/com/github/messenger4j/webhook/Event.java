@@ -191,4 +191,15 @@ public final class Event {
 		return (RequestThreadControlEvent) baseEvent;
 	}
 
+	public boolean isAppRolesEvent() {
+		return baseEvent instanceof AppRolesEvent;
+	}
+
+	public AppRolesEvent asAppRolesEvent() {
+		if (!isAppRolesEvent()) {
+			throw new UnsupportedOperationException("not a AppRolesEvent");
+		}
+		return (AppRolesEvent) baseEvent;
+	}
+
 }

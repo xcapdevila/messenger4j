@@ -241,23 +241,35 @@ public final class Messenger {
 			 */
 			final JsonArray entries = getPropertyAsJsonArray(payloadJsonObject, PROP_ENTRY).orElseThrow(IllegalArgumentException::new);
 			for (JsonElement entry : entries) {
-				BaseEventType baseEventType = BaseEventType.MESSAGING;
 				JsonArray receivedEvents = getPropertyAsJsonArray(entry.getAsJsonObject(), PROP_MESSAGING).orElse(null);
+				BaseEventType baseEventType = BaseEventType.MESSAGING;
 				if (receivedEvents == null) {
+					/**
+					 * Standby Events
+					 */
 					receivedEvents = getPropertyAsJsonArray(entry.getAsJsonObject(), PROP_STANDBY).orElseThrow(IllegalAccessError::new);
 					baseEventType = BaseEventType.STANDBY;
 				}
 				for (JsonElement receivedEvent : receivedEvents) {
-					final Event event = EventFactory.createEvent(receivedEvent.getAsJsonObject(), baseEventType);
+					final JsonObject receivedEventAsJsonObject = receivedEvent.getAsJsonObject();
+					if (baseEventType != BaseEventType.STANDBY) {
+						if (hasAnyProperty(receivedEventAsJsonObject, PROP_PASS_THREAD_CONTROL, PROP_REQUEST_THREAD_CONTROL, PROP_TAKE_THREAD_CONTROL,
+								PROP_APP_ROLES)) {
+							/**
+							 * Handover Events
+							 */
+							baseEventType = BaseEventType.HANDOVER;
+						} else {
+							/**
+							 * Messaging Events (Default)
+							 */
+							baseEventType = BaseEventType.MESSAGING;
+						}
+					}
+					final Event event = EventFactory.createEvent(receivedEventAsJsonObject, baseEventType);
 					eventHandler.accept(event);
 				}
 			}
-		} else if (hasAnyMember(payloadJsonObject, PROP_PASS_THREAD_CONTROL.value(), PROP_REQUEST_THREAD_CONTROL.value(), PROP_TAKE_THREAD_CONTROL.value())) {
-			/**
-			 * Handover Events
-			 */
-			final Event event = EventFactory.createEvent(payloadJsonObject, BaseEventType.HANDOVER);
-			eventHandler.accept(event);
 		} else {
 			/**
 			 * Unrecognized Events
