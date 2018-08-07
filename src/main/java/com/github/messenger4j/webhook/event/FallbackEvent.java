@@ -1,9 +1,10 @@
 package com.github.messenger4j.webhook.event;
 
-import java.time.Instant;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
 import lombok.ToString;
+
+import java.time.Instant;
 
 /**
  * @author Max Grabenhorst
@@ -13,7 +14,7 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 public final class FallbackEvent extends BaseEvent {
 
-    public FallbackEvent(@NonNull String senderId, @NonNull String recipientId, @NonNull Instant timestamp) {
-        super(senderId, recipientId, timestamp);
-    }
+	public FallbackEvent(@NonNull String senderId, @NonNull String recipientId, @NonNull Instant timestamp, @NonNull BaseEventType baseEventType) {
+		super(senderId, recipientId, timestamp, baseEventType);
+	}
 }
